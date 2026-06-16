@@ -3,8 +3,8 @@ if _G.running then
 end
 _G.running = true
 _G.doingSomething = false
-
-local baseUrl = "https://raw.githubusercontent.com/hickwhither/redliner-power/refs/heads/main/src/"
+                 
+local baseUrl = "https://raw.githubusercontent.com/hickwhither/redliner-power/refs/heads/master/src/"
 
 local function fetch(name)
     print(name)
