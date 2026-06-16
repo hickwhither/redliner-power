@@ -10,7 +10,7 @@ def src_file(filepath):
 def index():
     with open("./src/main.lua", "r") as f:
         c = f.read().strip()
-    c = c.replace("https://raw.githubusercontent.com/ImLangNaoCoBe/onepiece-final-FS/refs/heads/main/src/",
+    c = c.replace("https://raw.githubusercontent.com/hickwhither/redliner-power/refs/heads/main/src/",
                   'http://192.168.2.115:5000/src/')
     return c
 

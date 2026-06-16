@@ -4,7 +4,7 @@ end
 _G.running = true
 _G.doingSomething = false
 
-local baseUrl = "https://raw.githubusercontent.com/ImLangNaoCoBe/onepiece-final-FS/refs/heads/main/src/"
+local baseUrl = "https://raw.githubusercontent.com/hickwhither/redliner-power/refs/heads/main/src/"
 
 local function fetch(name)
     print(name)
