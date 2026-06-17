@@ -11,7 +11,7 @@ def index():
     with open("./src/main.lua", "r") as f:
         c = f.read().strip()
     c = c.replace("https://raw.githubusercontent.com/hickwhither/redliner-power/refs/heads/master/src/",
-                  'http://127.0.0.1:5000/src/')
+                  f'{request.url}/src/')
     return c
 
 app.run('0.0.0.0', 5000, debug=True)
