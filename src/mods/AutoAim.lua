@@ -54,6 +54,8 @@ local function getBestTarget(LocalPlayer, Camera)
         if player ~= LocalPlayer and player.Character then
             if player.Name == "HickWhither" then continue end
             if player.Name == "KSuMinhUwU" then continue end
+
+            if player.Character.Parent ~= workspace.Entities then return end
             
             local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
             local humanoid = player.Character:FindFirstChildOfClass("Humanoid")

@@ -74,7 +74,7 @@ local function createPlayer2DESP(character, player)
             return false
         end
         
-        local healthPercent = math.clamp(humanoid.Health / humanoid.MaxHealth, 0, 1)
+        local healthPercent = math.clamp(player.ReadOnly.health / player.ReadOnly.health_max, 0, 1)
         
         -- Cập nhật thanh máu tụt dần từ TRÊN xuống DƯỚI
         healthFill.Size = UDim2.new(1, 0, healthPercent, 0)
