@@ -20,10 +20,10 @@ _G.offlineservice = fetch("pack/offlineservice.lua")
 
 fetch("Utils.lua")
 fetch("UI.lua")
--- fetch("ESP.lua")
 
 fetch("mods/Fullbright.lua")
 fetch("mods/NoFog.lua")
 fetch("mods/AutoAim.lua")
+fetch("mods/ESP.lua")
 
 print("OK All modules loaded!")

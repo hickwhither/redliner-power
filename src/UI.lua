@@ -194,7 +194,7 @@ screenGui = create("ScreenGui", {
 mainFrame = create("Frame", {
     Name = "MainFrame",
     Size = UDim2.new(0.17, 0, 0.4, 0),
-    Position = UDim2.new(0.5, 0, 0.45, 0),
+    Position = UDim2.new(0.8, 0, 0.45, 0),
     AnchorPoint = Vector2.new(0.5, 0.8),
     BackgroundColor3 = Color3.fromRGB(25, 25, 25),
     Active = true,
@@ -253,6 +253,10 @@ stopBtn.MouseButton1Click:Connect(stopScript)
 UI.createButton("Fullbright")
 UI.createButton("NoFog")
 UI.createButton("AutoAim")
+UI.createButton("ESP")
+
+-- Đặt keybind mặc định cho AutoAim là V
+UI.bindings["AutoAim"] = Enum.KeyCode.V
 
 ----------------------------------------------------------------
 -- PHÍM TẮT
