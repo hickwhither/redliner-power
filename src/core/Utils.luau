@@ -1,7 +1,6 @@
--- Utils.lua
-local Utils = _G.offlineservice("Utils")
+local Utils = {}
+local objectConnections = {}
 
-local Workspace = game:GetService("Workspace")
 local Players = game:GetService("Players")
 
 function Utils.getPrimaryPart(target)
@@ -31,19 +30,18 @@ end
 
 function Utils.storeObjectConnection(obj, conn)
     if not obj then return end
-    _G.state.objectConnections[obj] = _G.state.objectConnections[obj] or {}
-    table.insert(_G.state.objectConnections[obj], conn)
-    table.insert(_G.state.connections, conn)
+    objectConnections[obj] = objectConnections[obj] or {}
+    table.insert(objectConnections[obj], conn)
 end
 
 function Utils.clearObjectConnections(obj)
     if not obj then return end
-    local tbl = _G.state.objectConnections[obj]
+    local tbl = objectConnections[obj]
     if tbl then
         for _, c in ipairs(tbl) do
             pcall(function() c:Disconnect() end)
         end
-        _G.state.objectConnections[obj] = nil
+        objectConnections[obj] = nil
     end
 end
 
@@ -87,3 +85,11 @@ function Utils.teleportToPosition(pos)
     root.CFrame = CFrame.new(pos + Vector3.new(0,3,0))
     return true
 end
+
+function Utils.destroy()
+    for obj in pairs(objectConnections) do
+        Utils.clearObjectConnections(obj)
+    end
+end
+
+return Utils

@@ -1,31 +1,40 @@
-local AutoAim = _G.offlineservice("AutoAim")
+local AutoAim = {}
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
 local aimConnection = nil
+local enabled = false
+local destroyed = false
+local statusText = nil
+local uiConnection = nil
 
---- ==========================================
---- KHỞI TẠO UI HIỂN THỊ TRẠNG THÁI AIM
---- ==========================================
-local statusText = Drawing.new("Text")
-statusText.Visible = true
-statusText.Center = true
-statusText.Outline = true
-statusText.Size = 22
-statusText.Font = 2 -- Phông chữ rõ nét, dễ nhìn
-statusText.Text = "Aim : OFF"
-statusText.Color = Color3.fromRGB(255, 0, 0) -- Mặc định là OFF (Màu đỏ)
-
--- Vòng lặp cập nhật vị trí chữ (X giữa, Y 3/4 màn hình) liên tục
-local uiConnection = RunService.RenderStepped:Connect(function()
-    local camera = workspace.CurrentCamera
-    if camera then
-        local viewportSize = camera.ViewportSize
-        -- Tọa độ: X ở giữa (* 0.5), Y ở vị trí 3/4 (* 0.75)
-        statusText.Position = Vector2.new(viewportSize.X * 0.5, viewportSize.Y * 0.55)
+local function updateStatus()
+    if statusText then
+        statusText.Text = enabled and "Aim : ON" or "Aim : OFF"
+        statusText.Color = enabled and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
     end
-end)
+end
+
+-- The controller calls init even while disabled to display the OFF status.
+function AutoAim.init()
+    if destroyed or statusText then return end
+    statusText = Drawing.new("Text")
+    statusText.Visible = true
+    statusText.Center = true
+    statusText.Outline = true
+    statusText.Size = 22
+    statusText.Font = 2
+    updateStatus()
+
+    uiConnection = RunService.RenderStepped:Connect(function()
+        local camera = workspace.CurrentCamera
+        if camera then
+            local viewportSize = camera.ViewportSize
+            statusText.Position = Vector2.new(viewportSize.X * 0.5, viewportSize.Y * 0.55)
+        end
+    end)
+end
 
 --- ==========================================
 --- LOGIC CHECK TƯỜNG & AIM
@@ -54,6 +63,7 @@ local function getBestTarget(LocalPlayer, Camera)
         if player ~= LocalPlayer and player.Character then
             if player.Name == "HickWhither" then continue end
             if player.Name == "KSuMinhUwU" then continue end
+            if player.Name == "BekS41z" then continue end
 
             if player.Character.Parent ~= workspace.Entities then return end
             
@@ -81,15 +91,13 @@ local function getBestTarget(LocalPlayer, Camera)
     return bestTarget
 end
 
-function AutoAim:startAutoAim()
-    -- Cập nhật chữ sang ON khi kích hoạt
-    statusText.Text = "Aim : ON"
-    statusText.Color = Color3.fromRGB(0, 255, 0) -- Màu xanh lá
-    
-    if aimConnection then return end
+function AutoAim.enable()
+    if destroyed or enabled then return end
+    enabled = true
+    updateStatus()
 
     aimConnection = RunService.RenderStepped:Connect(function()
-        if not _G.UI.settings.AutoAim then return end
+        if not enabled then return end
 
         local LocalPlayer = Players.LocalPlayer
         if not LocalPlayer or not LocalPlayer.Character then return end
@@ -107,28 +115,32 @@ function AutoAim:startAutoAim()
     end)
 end
 
-function AutoAim:stopAutoAim()
-    -- Cập nhật chữ sang OFF khi tắt
-    statusText.Text = "Aim : OFF"
-    statusText.Color = Color3.fromRGB(255, 0, 0) -- Màu đỏ
-    
+function AutoAim.disable()
+    enabled = false
+    updateStatus()
+
     if aimConnection then
         aimConnection:Disconnect()
         aimConnection = nil
     end
 end
 
-_G.UI.addEventHandler("AutoAim", function(state)
-    if state then
-        AutoAim:startAutoAim()
-    else
-        AutoAim:stopAutoAim()
+function AutoAim.destroy()
+    if destroyed then return end
+    destroyed = true
+    AutoAim.disable()
+    if uiConnection then
+        uiConnection:Disconnect()
+        uiConnection = nil
     end
-end)
+    if statusText then
+        statusText:Remove()
+        statusText = nil
+    end
+end
 
-_G.UI.addStopHandler(function()
-    AutoAim:stopAutoAim()
-    -- Dọn dẹp UI khi tắt script hoàn toàn để tránh rác bộ nhớ
-    if uiConnection then uiConnection:Disconnect() end
-    if statusText then statusText:Remove() end
-end)
+function AutoAim.isEnabled()
+    return enabled
+end
+
+return AutoAim

@@ -1,1 +1,8 @@
-.git
+__pycache__/
+*.py[cod]
+.venv/
+Packages/
+ServerPackages/
+DevPackages/
+dist/
+.DS_Store

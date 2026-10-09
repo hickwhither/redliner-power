@@ -1,17 +1,18 @@
-from flask import Flask, send_from_directory, jsonify, request, send_file, Response
+from pathlib import Path
+
+from flask import Flask, Response
 
 app = Flask(__name__)
-
-@app.route('/src/<path:filepath>')
-def src_file(filepath):
-    return send_from_directory('src', filepath)
+artifact = Path(__file__).resolve().parent / "dist" / "redliner.lua"
 
 @app.route('/')
 def index():
-    with open("./src/main.lua", "r") as f:
-        c = f.read().strip()
-    c = c.replace("https://raw.githubusercontent.com/hickwhither/redliner-power/refs/heads/master/src/",
-                  f'{request.host_url}src/')
-    return c
+    try:
+        content = artifact.read_bytes()
+    except FileNotFoundError:
+        return Response("Build dist/redliner.lua before starting the server.\n", status=503,
+                        content_type="text/plain; charset=utf-8")
+    return Response(content, content_type="text/plain; charset=utf-8")
 
-app.run('0.0.0.0', 5000, debug=True)
+if __name__ == "__main__":
+    app.run('0.0.0.0', 5000)

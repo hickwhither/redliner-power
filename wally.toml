@@ -1,0 +1,9 @@
+[package]
+name = "hickwhither/redliner-power"
+version = "0.1.0"
+realm = "shared"
+registry = "https://github.com/UpliftGames/wally-index"
+private = true
+
+[dependencies]
+# Fluent loads from its official release URL; there are no registry dependencies yet.

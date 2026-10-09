@@ -1,4 +1,4 @@
-local ESP = _G.offlineservice("ESP")
+local ESP = {}
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -7,6 +7,10 @@ local activeESP = {}       -- Chứa các hàm cập nhật đang chạy
 local playerConnections = {} -- Quản lý sự kiện của từng người chơi
 local updateConnection = nil
 local playerJoinConn, playerLeaveConn
+local enabled = false
+local destroyed = false
+local generation = 0
+local pendingTasks = {}
 
 -- Hàm tạo trọn bộ ESP 2D (Khung dọc + Thanh máu dọc + Tên ở dưới)
 local function createPlayer2DESP(character, player)
@@ -69,7 +73,7 @@ local function createPlayer2DESP(character, player)
     
     -- Hàm cập nhật lượng máu theo thời gian thực
     return function()
-        if not _G.UI.settings.ESP or not character.Parent or not humanoid.Parent or not rootPart.Parent then
+        if not enabled or not character.Parent or not humanoid.Parent or not rootPart.Parent then
             billboardGui:Destroy()
             return false
         end
@@ -93,19 +97,27 @@ local function createPlayer2DESP(character, player)
 end
 
 -- [Hệ thống quản lý sự kiện và vòng lặp]
-function ESP:startHighlight()
-    if updateConnection then return end
-    _G.UI.settings.ESP = true
+function ESP.enable()
+    if destroyed or enabled then return end
+    enabled = true
+    generation += 1
+    local currentGeneration = generation
     
     local function setupPlayerESP(player)
-        if player == Players.LocalPlayer then return end
+        if not enabled or generation ~= currentGeneration or player == Players.LocalPlayer or playerConnections[player] then return end
         
         local function onCharacterAdded(character)
-            task.wait(0.3) -- Chờ nhân vật tải xong
-            if not _G.UI.settings.ESP then return end
-            
-            local espUpdate = createPlayer2DESP(character, player)
-            if espUpdate then table.insert(activeESP, espUpdate) end
+            if not enabled or generation ~= currentGeneration then return end
+            local pending
+            pending = task.delay(0.3, function()
+                pendingTasks[pending] = nil
+                if not enabled or destroyed or generation ~= currentGeneration then return end
+                if not playerConnections[player] or player.Character ~= character then return end
+
+                local espUpdate = createPlayer2DESP(character, player)
+                if espUpdate then table.insert(activeESP, espUpdate) end
+            end)
+            pendingTasks[pending] = player
         end
         
         local conn = player.CharacterAdded:Connect(onCharacterAdded)
@@ -122,18 +134,22 @@ function ESP:startHighlight()
     
     playerJoinConn = Players.PlayerAdded:Connect(setupPlayerESP)
     playerLeaveConn = Players.PlayerRemoving:Connect(function(player)
+        if not enabled or generation ~= currentGeneration then return end
         if playerConnections[player] then
             playerConnections[player]:Disconnect()
             playerConnections[player] = nil
+        end
+        for pending, owner in pairs(pendingTasks) do
+            if owner == player then
+                task.cancel(pending)
+                pendingTasks[pending] = nil
+            end
         end
     end)
     
     -- Vòng lặp cập nhật mượt mà chuẩn 60FPS+ bằng Heartbeat
     updateConnection = RunService.Heartbeat:Connect(function()
-        if not _G.UI.settings.ESP then
-            ESP:stopHighlight()
-            return
-        end
+        if not enabled or generation ~= currentGeneration then return end
         
         for i = #activeESP, 1, -1 do
             local isAlive = activeESP[i]()
@@ -144,8 +160,14 @@ function ESP:startHighlight()
     end)
 end
 
-function ESP:stopHighlight()
-    _G.UI.settings.ESP = false
+function ESP.disable()
+    enabled = false
+    generation += 1
+
+    for pending in pairs(pendingTasks) do
+        task.cancel(pending)
+    end
+    table.clear(pendingTasks)
     
     if updateConnection then updateConnection:Disconnect() updateConnection = nil end
     if playerJoinConn then playerJoinConn:Disconnect() playerJoinConn = nil end
@@ -162,14 +184,14 @@ function ESP:stopHighlight()
     table.clear(activeESP)
 end
 
-_G.UI.addEventHandler("ESP", function(state)
-    if state then
-        ESP:startHighlight()
-    else
-        ESP:stopHighlight()
-    end
-end)
+function ESP.destroy()
+    if destroyed then return end
+    destroyed = true
+    ESP.disable()
+end
 
-_G.UI.addStopHandler(function()
-    ESP:stopHighlight()
-end)
+function ESP.isEnabled()
+    return enabled
+end
+
+return ESP
